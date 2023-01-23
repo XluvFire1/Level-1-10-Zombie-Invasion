@@ -1,55 +1,32 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField]
-    private float _speed;
+    public float moveSpeed = 5f;
 
-    [SerializeField]
-    private float _rotationSpeed;
+    public Rigidbody2D rb;
+    public Camera cam;
 
-    private Rigidbody2D _rigidbody;
-    private Vector2 _movementInput;
-    private Vector2 _smoothedMovementInput;
-    private Vector2 _movementInputSmoothVelocity;
+    Vector2 movement;
+    Vector2 mousePos;
 
-    private void Awake()
+    //Update is called once per frame
+    void Update()
     {
-        _rigidbody = GetComponent<Rigidbody2D>();
+        movement.x = Input.GetAxisRaw("Horizontal");
+        movement.y = Input.GetAxisRaw("Vertical");
+
+        mousePos = cam.ScreenToWorldPoint(Input.mousePosition);
     }
 
-    private void FixedUpdate()
+    void FixedUpdate()
     {
-        SetPlayerVelocity();
-        RotateInDirectionOfInput();
-    }
+        rb.MovePosition(rb.position + movement * moveSpeed * Time.fixedDeltaTime);
 
-    private void SetPlayerVelocity()
-    {
-        _smoothedMovementInput = Vector2.SmoothDamp(
-                    _smoothedMovementInput,
-                    _movementInput,
-                    ref _movementInputSmoothVelocity,
-                    0.1f);
-
-        _rigidbody.velocity = _smoothedMovementInput * _speed;
-    }
-
-    private void RotateInDirectionOfInput()
-    {
-        if (_movementInput != Vector2.zero)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(transform.forward, _smoothedMovementInput);
-            Quaternion rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
-
-            _rigidbody.MoveRotation(rotation);
-        }
-    }
-
-    private void OnMove(InputValue inputValue)
-    {
-        _movementInput = inputValue.Get<Vector2>();
+        Vector2 lookDir = mousePos - rb.position;
+        float angle = Mathf.Atan2(lookDir.y, lookDir.x) * Mathf.Rad2Deg - 90f;
+        rb.rotation = angle;
     }
 }
-
